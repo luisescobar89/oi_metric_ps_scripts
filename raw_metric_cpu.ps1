@@ -20,7 +20,7 @@ $method = "post"
 $unix_time = [int][double]::Parse((Get-Date -UFormat %s))
 
 #Get random value for testing
-$value = Get-Random -Maximum 100
+$value = Get-Random -Minimum 40 -Maximum 100
 
 # Specify request body
 $hash =@{
