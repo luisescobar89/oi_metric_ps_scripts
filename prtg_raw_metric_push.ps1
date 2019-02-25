@@ -9,17 +9,16 @@ metric_type	Name of the metric. e.g. "Disk C: % Free Space/""
 resource	Information about the resource for which metric data is being collected. In the example below, C:\ is the resource for which metric data is collected. e.g. "C:\\"
 node	IP, FQDN, name of the CI, or host. In the example below, the name of the Linux server where the disks are installed. e.g. "myserver1.domain.com"
 value	Value of the metric.  e.g. 50
-timestamp	Epoch timestamp of the metric in milliseconds.  e.g. "1473183012000"
+timestamp	Epoch timestamp of the metric in milliseconds.  e.g. "1551113678000"
 source	Data source monitoring the metric type. e.g. "PRTG Metrics"
 #>
-
 
 #Pass placeholders from PRTG custom notification that match the variables below with no value assigned
 param( 
 		[string]$sensor,    #metric_name
 		[string]$name,      #resource 
 		[string]$hostname,  #node
-		  [int]$lastvalue,  #value
+		   [int]$lastvalue, #value
 		[string]$source     = "PRTG Metrics",    #source
 	    [int64]$timestamp   = [int][double]::Parse((Get-Date (get-date).touniversaltime() -UFormat %s)) * 1000   #timestamp
 	   
@@ -61,4 +60,3 @@ $response = Invoke-WebRequest -ContentType 'application/json' -Headers $headers 
 
 # Print response in Powershell environment
 $response.RawConten
-
