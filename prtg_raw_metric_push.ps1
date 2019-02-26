@@ -20,7 +20,7 @@ param(
 		[string]$hostname,  #node
 		   [int]$lastvalue, #value
 		[string]$source     = "PRTG Metrics",    #source
-	    [int64]$timestamp   = [int][double]::Parse((Get-Date (get-date).touniversaltime() -UFormat %s)) * 1000   #timestamp
+	     [int64]$timestamp  = [int][double]::Parse((Get-Date (get-date).touniversaltime() -UFormat %s)) * 1000   #timestamp
 	   
 )
 
