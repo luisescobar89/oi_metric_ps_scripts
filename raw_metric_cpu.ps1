@@ -1,7 +1,10 @@
 # Eg. User name="admin", Password="admin" for this code sample.
-$text = Get-Content credentials.txt
+$filepath = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent 
+$text = Get-Content "$($filepath)\Credentials.txt"
 $user = $text[0]
 $pass = $text[1]
+
+
 
 # Build auth header
 $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $user, $pass)))
@@ -17,25 +20,27 @@ $uri = $text[2]
 $method = "post"
 
 #Get time in Unix Format
-$unix_time = [int][double]::Parse((Get-Date -UFormat %s))
+$mills_time = [int][double]::Parse((Get-Date (get-date).touniversaltime() -UFormat %s)) * 1000
 
 #Get random value for testing
-$value = Get-Random -Maximum 100
+$value = Get-Random -Minimum 40 -Maximum 60
 
 # Specify request body
 $hash =@{
-            metric_type = 'Disk E: % Free Space'
-			resource = "E:\";
-			node = "nywvdpr02";
+            metric_type = 'cpu_usage'
+			resource = "CPU 1";
+			node = "nylvdpr10";
 			value  = $value;
-			timestamp = $unix_time;
+			timestamp = $mills_time;
 			source = "PRTG Metrics"
+
         }
-				 
+
 # Convert hash to JSON
 $body = "[$($hash | ConvertTo-Json)]"
 
-Write-Host $body
+#View JSON output
+#Write-Host $body
 
 # Send HTTP request
 $response = Invoke-WebRequest -ContentType 'application/json' -Headers $headers -Method $method -Uri $uri -Body $body
