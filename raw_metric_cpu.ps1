@@ -1,7 +1,10 @@
 # Eg. User name="admin", Password="admin" for this code sample.
-$text = Get-Content credentials.txt
+$filepath = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent 
+$text = Get-Content "$($filepath)\Credentials.txt"
 $user = $text[0]
 $pass = $text[1]
+
+
 
 # Build auth header
 $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $user, $pass)))
@@ -19,9 +22,8 @@ $method = "post"
 #Get time in Unix Format
 $mills_time = [int][double]::Parse((Get-Date (get-date).touniversaltime() -UFormat %s)) * 1000
 
-
 #Get random value for testing
-$value = Get-Random -Minimum 40 -Maximum 50
+$value = Get-Random -Minimum 40 -Maximum 60
 
 # Specify request body
 $hash =@{
@@ -37,11 +39,11 @@ $hash =@{
 # Convert hash to JSON
 $body = "[$($hash | ConvertTo-Json)]"
 
-Write-Host $body
+#View JSON output
+#Write-Host $body
 
 # Send HTTP request
 $response = Invoke-WebRequest -ContentType 'application/json' -Headers $headers -Method $method -Uri $uri -Body $body
 
 # Print response in Powershell environment
 $response.RawConten
-
