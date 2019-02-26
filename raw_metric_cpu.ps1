@@ -4,8 +4,6 @@ $text = Get-Content "$($filepath)\Credentials.txt"
 $user = $text[0]
 $pass = $text[1]
 
-
-
 # Build auth header
 $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $user, $pass)))
 
@@ -23,7 +21,7 @@ $method = "post"
 $mills_time = [int][double]::Parse((Get-Date (get-date).touniversaltime() -UFormat %s)) * 1000
 
 #Get random value for testing
-$value = Get-Random -Minimum 40 -Maximum 60
+$value = Get-Random -Minimum 90 -Maximum 100
 
 # Specify request body
 $hash =@{
