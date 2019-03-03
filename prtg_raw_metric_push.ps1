@@ -16,13 +16,41 @@ source	Data source monitoring the metric type. e.g. "PRTG Metrics"
 #Pass placeholders from PRTG custom notification that match the variables below with no value assigned
 param( 
 		[string]$sensor,    #metric_name
-		[string]$name,      #resource 
+		[string]$shortname,      #resource 
 		[string]$hostname,  #node
-		   [int]$lastvalue, #value
+		[string]$message, #value
+		[string]$uri,
 		[string]$source     = "PRTG Metrics",    #source
-	     [int64]$timestamp  = [int][double]::Parse((Get-Date (get-date).touniversaltime() -UFormat %s)) * 1000   #timestamp
-	   
+		 [int64]$timestamp  = [int][double]::Parse((Get-Date (get-date).touniversaltime() -UFormat %s)) * 1000   #timestamp			   
 )
+
+if (!$uri -or !$sensor -or !$name -or !$hostname -or !$message) {
+
+	#Missing parameters, end script execution
+	Write-Host "exit 1"
+	#exit 1
+
+}
+
+$value
+
+#get metric value from message string and convert to float
+if ($message -and $message.Length -le 20){
+	$value  = $message -replace "[^\d.,]"
+	
+}
+
+if($value){
+
+	[double]$value = $value -replace "[,]", "."
+}
+	else{
+		Write-Host "exit 2"
+		#exit 2
+
+	}
+
+#$value.GetType()
 
 # Eg. User name="admin", Password="admin" for this code sample.
 $user = "snow"
@@ -36,7 +64,7 @@ $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
 $headers.Add('Authorization',('Basic {0}' -f $base64AuthInfo))
 
 # Specify endpoint uri - REST Protocol
-$uri = "http://10.96.162.38:8001/api/mid/sa/metrics"
+#$uri = "http://10.96.162.38:8001/api/mid/sa/metrics"
 
 # Specify HTTP method
 $method = "post"
@@ -46,7 +74,7 @@ $hash =@{
             metric_type = $sensor;
 			resource = $name;
 			node = $hostname;
-			value  = $lastvalue;
+			value  = $value;
 			timestamp = $timestamp;
 			source = $source
 
@@ -55,8 +83,10 @@ $hash =@{
 # Convert hash to JSON
 $body = "[$($hash | ConvertTo-Json)]"
 
+Write-Host $body
+
 # Send HTTP request
-$response = Invoke-WebRequest -ContentType 'application/json' -Headers $headers -Method $method -Uri $uri -Body $body
+#$response = Invoke-WebRequest -ContentType 'application/json' -Headers $headers -Method $method -Uri $uri -Body $body
 
 # Print response in Powershell environment
 $response.RawConten
