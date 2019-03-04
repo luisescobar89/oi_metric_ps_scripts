@@ -29,6 +29,7 @@ if (!$uri -or !$sensor -or !$shortname -or !$hostname -or !$message) {
 
 	#Missing parameters, end script execution
 	exit 1
+	Write-Host "exit1"
 }
 
 function Get-MetricValues {
@@ -83,11 +84,14 @@ $body = "[$($hash | ConvertTo-Json)]"
 # Send HTTP request
 try{
 $response = Invoke-WebRequest -ContentType 'application/json' -Headers $headers -Method $method -Uri $uri -Body $body
+# Print response in Powershell environment
+$response.RawConten
+exit
 }
 catch{
 	Write-Host -ForegroundColor:Red "Error Invoking WebRequest to $($uri)"
 	Write-Host -ForegroundColor:Red $_.Exception.ToString()
+	exit 3
 }
 
-# Print response in Powershell environment
-$response.RawConten
+
