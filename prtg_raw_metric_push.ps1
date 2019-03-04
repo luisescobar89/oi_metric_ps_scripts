@@ -16,9 +16,9 @@ source	Data source monitoring the metric type. e.g. "PRTG Metrics"
 #Pass placeholders from PRTG custom notification that match the variables below with no value assigned
 param( 
 		[string]$sensor,    #metric_name
-		[string]$shortname,      #resource 
+		[string]$shortname, #resource 
 		[string]$hostname,  #node
-		[string]$message, #value
+		[string]$message,           #value
 		[string]$uri,
 		[string]$source     = "PRTG Metrics",    #source
 		 [int64]$timestamp  = [int][double]::Parse((Get-Date (get-date).touniversaltime() -UFormat %s)) * 1000   #timestamp			   
@@ -32,25 +32,38 @@ if (!$uri -or !$sensor -or !$name -or !$hostname -or !$message) {
 
 }
 
-$value
+$value1 = "Warning by lookup value &#37;Weak Protocols Available&#39  10.2 200"
 
-#get metric value from message string and convert to float
-if ($message -and $message.Length -le 20){
-	$value  = $message -replace "[^\d.,]"
-	
-}
+[array]$myarr = $value1.split(" ")
 
-if($value){
+[array]$arr1 = @()
 
-	[double]$value = $value -replace "[,]", "."
-}
-	else{
-		Write-Host "exit 2"
-		#exit 2
 
+foreach($val in $myarr){
+	if ($val -match '^[+-]?([0-9]*[.])?[0-9]+'){
+		$arr1 += $val
+		#Write-Host $val
 	}
 
-#$value.GetType()
+}
+
+Write-Host $arr1[0]
+
+
+
+
+#get metric value from message string and convert to float
+if ($message -match '\d'){
+	$message = $message -replace "[,]", "."
+	$message = $message -match "(\b\d[.,\d]*\b)"
+	[double]$value = $Matches[0]
+	Write-Host $value
+}
+else{
+	Write-Host "exit 2"
+	#exit 2
+
+}
 
 # Eg. User name="admin", Password="admin" for this code sample.
 $user = "snow"
