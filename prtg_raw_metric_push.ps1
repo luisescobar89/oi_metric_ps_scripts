@@ -3,6 +3,7 @@
 # Version History
 # ----------------------------
 # 1.0      initial release
+# 1.1      added logic for parsing metric value from message variable
 # # # # # # # # # # # # # # # # # # # # # # # # # #
 <# Parameters required are the follwing:
 metric_type	Name of the metric. e.g. "Disk C: % Free Space/""
