@@ -16,13 +16,38 @@ source	Data source monitoring the metric type. e.g. "PRTG Metrics"
 #Pass placeholders from PRTG custom notification that match the variables below with no value assigned
 param( 
 		[string]$sensor,    #metric_name
-		[string]$name,      #resource 
+		[string]$shortname, #resource 
 		[string]$hostname,  #node
-		   [int]$lastvalue, #value
+		[string]$message,   #value
+		[string]$uri,       #midserver endpoint url
 		[string]$source     = "PRTG Metrics",    #source
-	     [int64]$timestamp  = [int][double]::Parse((Get-Date (get-date).touniversaltime() -UFormat %s)) * 1000   #timestamp
-	   
+		 [int64]$timestamp  = [int][double]::Parse((Get-Date (get-date).touniversaltime() -UFormat %s)) * 1000   #timestamp			   
 )
+
+if (!$uri -or !$sensor -or !$shortname -or !$hostname -or !$message) {
+
+	#Missing parameters, end script execution
+	exit 1
+}
+
+function Get-MetricValues {
+	param ($description)
+	[array]$myarr = $description.split(" ")
+
+	foreach($val in $myarr){
+		if ($val -match '^[+-]?([0-9]*[.])?[0-9]+'){
+			return [double]$val
+		}
+	}
+}
+
+#get metric value from message string and convert to float
+$value = Get-MetricValues $message
+
+if ($value.count -eq 0){
+	#No metric value obtained from message, end script execution
+	exit 2
+}
 
 # Eg. User name="admin", Password="admin" for this code sample.
 $user = "snow"
@@ -35,18 +60,15 @@ $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0
 $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
 $headers.Add('Authorization',('Basic {0}' -f $base64AuthInfo))
 
-# Specify endpoint uri - REST Protocol
-$uri = "http://10.96.162.38:8001/api/mid/sa/metrics"
-
 # Specify HTTP method
 $method = "post"
 
 # Specify request body
 $hash =@{
             metric_type = $sensor;
-			resource = $name;
+			resource = $shortname;
 			node = $hostname;
-			value  = $lastvalue;
+			value  = $value;
 			timestamp = $timestamp;
 			source = $source
 
@@ -55,8 +77,16 @@ $hash =@{
 # Convert hash to JSON
 $body = "[$($hash | ConvertTo-Json)]"
 
+#Write-Host $body #uncomment to view JSON object
+
 # Send HTTP request
+try{
 $response = Invoke-WebRequest -ContentType 'application/json' -Headers $headers -Method $method -Uri $uri -Body $body
+}
+catch{
+	Write-Host -ForegroundColor:Red "Error Invoking WebRequest to $($uri)"
+	Write-Host -ForegroundColor:Red $_.Exception.ToString()
+}
 
 # Print response in Powershell environment
 $response.RawConten
