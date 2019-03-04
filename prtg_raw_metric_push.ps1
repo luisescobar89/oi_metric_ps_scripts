@@ -18,51 +18,35 @@ param(
 		[string]$sensor,    #metric_name
 		[string]$shortname, #resource 
 		[string]$hostname,  #node
-		[string]$message,           #value
-		[string]$uri,
+		[string]$message,   #value
+		[string]$uri,       #midserver endpoint url
 		[string]$source     = "PRTG Metrics",    #source
 		 [int64]$timestamp  = [int][double]::Parse((Get-Date (get-date).touniversaltime() -UFormat %s)) * 1000   #timestamp			   
 )
 
-if (!$uri -or !$sensor -or !$name -or !$hostname -or !$message) {
+if (!$uri -or !$sensor -or !$shortname -or !$hostname -or !$message) {
 
 	#Missing parameters, end script execution
-	Write-Host "exit 1"
-	#exit 1
-
+	exit 1
 }
 
-$value1 = "Warning by lookup value &#37;Weak Protocols Available&#39  10.2 200"
+function Get-MetricValues {
+	param ($description)
+	[array]$myarr = $description.split(" ")
 
-[array]$myarr = $value1.split(" ")
-
-[array]$arr1 = @()
-
-
-foreach($val in $myarr){
-	if ($val -match '^[+-]?([0-9]*[.])?[0-9]+'){
-		$arr1 += $val
-		#Write-Host $val
+	foreach($val in $myarr){
+		if ($val -match '^[+-]?([0-9]*[.])?[0-9]+'){
+			return [double]$val
+		}
 	}
-
 }
-
-Write-Host $arr1[0]
-
-
-
 
 #get metric value from message string and convert to float
-if ($message -match '\d'){
-	$message = $message -replace "[,]", "."
-	$message = $message -match "(\b\d[.,\d]*\b)"
-	[double]$value = $Matches[0]
-	Write-Host $value
-}
-else{
-	Write-Host "exit 2"
-	#exit 2
+$value = Get-MetricValues $message
 
+if ($value.count -eq 0){
+	#No metric value obtained from message, end script execution
+	exit 2
 }
 
 # Eg. User name="admin", Password="admin" for this code sample.
@@ -76,16 +60,13 @@ $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0
 $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
 $headers.Add('Authorization',('Basic {0}' -f $base64AuthInfo))
 
-# Specify endpoint uri - REST Protocol
-#$uri = "http://10.96.162.38:8001/api/mid/sa/metrics"
-
 # Specify HTTP method
 $method = "post"
 
 # Specify request body
 $hash =@{
             metric_type = $sensor;
-			resource = $name;
+			resource = $shortname;
 			node = $hostname;
 			value  = $value;
 			timestamp = $timestamp;
@@ -96,10 +77,16 @@ $hash =@{
 # Convert hash to JSON
 $body = "[$($hash | ConvertTo-Json)]"
 
-Write-Host $body
+#Write-Host $body #uncomment to view JSON object
 
 # Send HTTP request
-#$response = Invoke-WebRequest -ContentType 'application/json' -Headers $headers -Method $method -Uri $uri -Body $body
+try{
+$response = Invoke-WebRequest -ContentType 'application/json' -Headers $headers -Method $method -Uri $uri -Body $body
+}
+catch{
+	Write-Host -ForegroundColor:Red "Error Invoking WebRequest to $($uri)"
+	Write-Host -ForegroundColor:Red $_.Exception.ToString()
+}
 
 # Print response in Powershell environment
 $response.RawConten
